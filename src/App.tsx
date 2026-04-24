@@ -444,7 +444,7 @@ export default function App() {
       {/* Footer */}
       <div className="mt-8 text-center text-xs text-gray-300">
         <p>提示：路径将在输入时自动转换，点击「转换并记录」可保存至历史记录</p>
-        <p className="mt-1">支持 Windows 绝对路径、UNC 路径、macOS 绝对路径及家目录路径</p>
+        <p className="mt-1">支持 Windows 绝对路径、UNC 路径、macOS 绝对路径及家目录路径 · R:\ 映射为 smb://robeiisilon1/BEI/ROCOMMON</p>
       </div>
     </div>
   );
