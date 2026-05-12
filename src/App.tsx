@@ -252,6 +252,44 @@ function CopyLinkButton({ url }: { url: string }) {
   );
 }
 
+function CopyWinLinkButton({ path }: { path: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyWinLink = useCallback(() => {
+    if (!path) return;
+    // 用 <> 包裹 UNC 路径，让 Windows Outlook 自动识别为超链接
+    const wrapped = `<${path}>`;
+    navigator.clipboard.writeText(wrapped).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }, [path]);
+
+  return (
+    <button
+      onClick={handleCopyWinLink}
+      disabled={!path}
+      className="flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium text-green-600 hover:bg-green-50 active:bg-green-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed border border-green-200 hover:border-green-300"
+    >
+      {copied ? (
+        <>
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+          已复制链接
+        </>
+      ) : (
+        <>
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+          </svg>
+          复制超链接
+        </>
+      )}
+    </button>
+  );
+}
+
 export default function App() {
   const [inputPath, setInputPath] = useState("");
   const [outputPath, setOutputPath] = useState("");
@@ -357,7 +395,7 @@ export default function App() {
             <div className="flex items-center gap-2">
               {inputPath.trim() && (
                 <span className="text-xs text-gray-400">
-                  {isWindowsPath(inputPath.trim()) ? "Windows 路径" : isMacPath(inputPath.trim()) ? "macOS 路径" : "未知格式"}
+                  {isWindowsPath(inputPath.trim()) ? "Windows 路径" : isMacPath(inputPath.trim()) ? "macOS 路径" : inputPath.trim().startsWith("smb://") ? "macOS 路径" : "未知格式"}
                 </span>
               )}
               <CopyButton text={inputPath} />
@@ -401,6 +439,7 @@ export default function App() {
             <div className="flex items-center gap-2">
               {currentDirection && <DirectionBadge direction={currentDirection} />}
               {outputPath.startsWith("smb://") && <CopyLinkButton url={outputPath} />}
+              {/^\\\\/.test(outputPath) && <CopyWinLinkButton path={outputPath} />}
               <CopyButton text={outputPath} />
             </div>
           </div>
@@ -508,7 +547,6 @@ export default function App() {
       {/* Footer */}
       <div className="mt-8 text-center text-xs text-gray-300">
         <p>提示：路径将在输入时自动转换，点击「转换并记录」可保存至历史记录</p>
-        <p className="mt-1">支持 Windows 绝对路径、UNC 路径、macOS 绝对路径及家目录路径 · R:\ 映射为 smb://robeiisilon1/BEI/ROCOMMON</p>
       </div>
     </div>
   );
