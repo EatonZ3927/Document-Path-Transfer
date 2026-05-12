@@ -194,24 +194,37 @@ function CopyLinkButton({ url }: { url: string }) {
 
   const handleCopyLink = useCallback(() => {
     if (!url) return;
-    const html = `<a href="${url}">${url}</a>`;
-    const blob = new Blob([html], { type: "text/html" });
-    const textBlob = new Blob([url], { type: "text/plain" });
-    navigator.clipboard.write([
-      new ClipboardItem({
-        "text/html": blob,
-        "text/plain": textBlob,
-      }),
-    ]).then(() => {
+    // DOM 选区复制法：用 setAttribute 保留 href 中文原样，绕过浏览器 URL 规范化编码
+    const tempDiv = document.createElement("div");
+    const anchor = document.createElement("a");
+    anchor.setAttribute("href", url); // setAttribute 保留原始值，.href 属性会自动编码
+    anchor.textContent = url;
+    tempDiv.appendChild(anchor);
+    tempDiv.style.position = "fixed";
+    tempDiv.style.left = "-9999px";
+    tempDiv.style.top = "-9999px";
+    document.body.appendChild(tempDiv);
+
+    const range = document.createRange();
+    range.selectNodeContents(tempDiv);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    try {
+      document.execCommand("copy");
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    }).catch(() => {
+    } catch {
       // 回退为纯文本复制
       navigator.clipboard.writeText(url).then(() => {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       });
-    });
+    } finally {
+      selection.removeAllRanges();
+      document.body.removeChild(tempDiv);
+    }
   }, [url]);
 
   return (
