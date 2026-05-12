@@ -189,6 +189,56 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
+function CopyLinkButton({ url }: { url: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = useCallback(() => {
+    if (!url) return;
+    const html = `<a href="${url}">${url}</a>`;
+    const blob = new Blob([html], { type: "text/html" });
+    const textBlob = new Blob([url], { type: "text/plain" });
+    navigator.clipboard.write([
+      new ClipboardItem({
+        "text/html": blob,
+        "text/plain": textBlob,
+      }),
+    ]).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    }).catch(() => {
+      // 回退为纯文本复制
+      navigator.clipboard.writeText(url).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      });
+    });
+  }, [url]);
+
+  return (
+    <button
+      onClick={handleCopyLink}
+      disabled={!url}
+      className="flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium text-green-600 hover:bg-green-50 active:bg-green-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed border border-green-200 hover:border-green-300"
+    >
+      {copied ? (
+        <>
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+          已复制链接
+        </>
+      ) : (
+        <>
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+          </svg>
+          复制超链接
+        </>
+      )}
+    </button>
+  );
+}
+
 export default function App() {
   const [inputPath, setInputPath] = useState("");
   const [outputPath, setOutputPath] = useState("");
@@ -337,6 +387,7 @@ export default function App() {
             </label>
             <div className="flex items-center gap-2">
               {currentDirection && <DirectionBadge direction={currentDirection} />}
+              {outputPath.startsWith("smb://") && <CopyLinkButton url={outputPath} />}
               <CopyButton text={outputPath} />
             </div>
           </div>
